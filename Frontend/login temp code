@@ -1,0 +1,369 @@
+import { useState, useContext, useEffect, useRef } from "react";
+import { AuthContext } from "../context/AuthContext";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+
+const CODE_LINES = [
+  { text: 'import { useAuth } from "./StudyHive"', color: "#a78bfa" },
+  { text: "const session = await auth.verify(token)", color: "#67e8f9" },
+  { text: 'db.connect("mongodb://studyhive/prod")', color: "#86efac" },
+  { text: "user.permissions = await fetchRoles(uid)", color: "#fde68a" },
+  { text: "const dashboard = loadModules([", color: "#a78bfa" },
+  { text: '  "flashcards", "quizzes", "groups"', color: "#67e8f9" },
+  { text: "])", color: "#a78bfa" },
+  { text: "ws.connect(user.studyRoom)", color: "#86efac" },
+  { text: "analytics.track('login_success')", color: "#fde68a" },
+  { text: "router.push('/dashboard') ✓", color: "#4ade80" },
+];
+
+const LoginAnimation = ({ onDone }) => {
+  const [lines, setLines] = useState([]);
+  const [barWidth, setBarWidth] = useState(0);
+  const [done, setDone] = useState(false);
+  const lineIdx = useRef(0);
+  const charIdx = useRef(0);
+  const typed = useRef("");
+
+  useEffect(() => {
+    let raf;
+    let lastTime = 0;
+    const CHAR_INTERVAL = 28;
+
+    const tick = (now) => {
+      if (now - lastTime < CHAR_INTERVAL) { raf = requestAnimationFrame(tick); return; }
+      lastTime = now;
+
+      const line = CODE_LINES[lineIdx.current];
+      if (!line) {
+        setDone(true);
+        setTimeout(onDone, 600);
+        return;
+      }
+
+      typed.current += line.text[charIdx.current];
+      charIdx.current++;
+
+      setLines(prev => {
+        const next = [...prev];
+        next[lineIdx.current] = { text: typed.current, color: line.color };
+        return next;
+      });
+
+      const totalChars = CODE_LINES.reduce((s, l) => s + l.text.length, 0);
+      const doneChars = CODE_LINES.slice(0, lineIdx.current).reduce((s, l) => s + l.text.length, 0) + charIdx.current;
+      setBarWidth(Math.round((doneChars / totalChars) * 100));
+
+      if (charIdx.current >= line.text.length) {
+        lineIdx.current++;
+        charIdx.current = 0;
+        typed.current = "";
+      }
+
+      raf = requestAnimationFrame(tick);
+    };
+
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [onDone]);
+
+  return (
+    <div style={{
+      position: "fixed", inset: 0, background: "#050d1a", zIndex: 9999,
+      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+      fontFamily: "'Courier New', monospace",
+    }}>
+      <style>{`
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+        @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes scanline {
+          0%{top:0} 100%{top:100%}
+        }
+        .scan-line {
+          position:absolute; left:0; right:0; height:2px;
+          background:linear-gradient(90deg,transparent,rgba(167,139,250,0.18),transparent);
+          animation:scanline 2.4s linear infinite;
+          pointer-events:none;
+        }
+        .done-flash { animation: fadeUp 0.5s ease both; }
+      `}</style>
+
+      {/* Terminal window */}
+      <div style={{
+        width: "min(600px, 90vw)",
+        background: "#0d1f33",
+        border: "1px solid rgba(167,139,250,0.25)",
+        borderRadius: "12px",
+        overflow: "hidden",
+        position: "relative",
+      }}>
+
+        {/* Scanline effect */}
+        <div className="scan-line" />
+
+        {/* Title bar */}
+        <div style={{
+          background: "#111827", padding: "10px 16px",
+          display: "flex", alignItems: "center", gap: "8px",
+          borderBottom: "1px solid rgba(167,139,250,0.15)",
+        }}>
+          <div style={{ width: 11, height: 11, borderRadius: "50%", background: "#ef4444" }} />
+          <div style={{ width: 11, height: 11, borderRadius: "50%", background: "#f59e0b" }} />
+          <div style={{ width: 11, height: 11, borderRadius: "50%", background: "#22c55e" }} />
+          <span style={{ marginLeft: 8, fontSize: 12, color: "#6b7280", letterSpacing: "0.05em" }}>
+            studyhive — auth.js
+          </span>
+        </div>
+
+        {/* Code area */}
+        <div style={{ padding: "20px 24px", minHeight: 260, position: "relative" }}>
+          {/* Line numbers + code */}
+          {lines.map((line, i) => (
+            <div key={i} style={{
+              display: "flex", gap: 16, marginBottom: 6,
+              animation: "fadeUp 0.25s ease both",
+            }}>
+              <span style={{ color: "#334155", fontSize: 13, minWidth: 20, textAlign: "right", userSelect: "none" }}>
+                {i + 1}
+              </span>
+              <span style={{ color: line.color, fontSize: 13, letterSpacing: "0.01em" }}>
+                {line.text}
+                {i === lines.length - 1 && !done && (
+                  <span style={{
+                    display: "inline-block", width: 8, height: 15,
+                    background: "#a78bfa", marginLeft: 2, verticalAlign: "middle",
+                    animation: "blink 0.9s step-end infinite",
+                  }} />
+                )}
+              </span>
+            </div>
+          ))}
+
+          {done && (
+            <div className="done-flash" style={{
+              marginTop: 16, display: "flex", alignItems: "center", gap: 10,
+            }}>
+              <div style={{
+                width: 22, height: 22, borderRadius: "50%", background: "#22c55e",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <svg width="12" height="12" viewBox="0 0 12 12">
+                  <path d="M2 6l3 3 5-5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                </svg>
+              </div>
+              <span style={{ color: "#4ade80", fontSize: 13, letterSpacing: "0.03em" }}>
+                Authentication successful — redirecting…
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Progress bar */}
+        <div style={{ padding: "0 24px 18px" }}>
+          <div style={{
+            height: 3, background: "rgba(255,255,255,0.06)", borderRadius: 99, overflow: "hidden",
+          }}>
+            <div style={{
+              height: "100%", borderRadius: 99, width: `${barWidth}%`,
+              background: "linear-gradient(90deg, #7c3aed, #06b6d4)",
+              transition: "width 0.1s linear",
+            }} />
+          </div>
+          <div style={{
+            marginTop: 6, display: "flex", justifyContent: "space-between",
+            fontSize: 11, color: "#475569",
+          }}>
+            <span>Initializing session</span>
+            <span>{barWidth}%</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Floating particles */}
+      <FloatingParticles />
+    </div>
+  );
+};
+
+const PARTICLES = [
+  "{}", "=>", "//", "&&", "!=", "[]", "()", "++", "<<", "??"
+];
+
+const FloatingParticles = () => {
+  const items = Array.from({ length: 14 }, (_, i) => ({
+    id: i,
+    symbol: PARTICLES[i % PARTICLES.length],
+    left: `${8 + (i * 7) % 85}%`,
+    delay: `${(i * 0.4) % 3}s`,
+    dur: `${3.5 + (i * 0.3) % 2}s`,
+    size: 11 + (i % 4),
+    opacity: 0.12 + (i % 5) * 0.04,
+  }));
+
+  return (
+    <div style={{ position: "fixed", inset: 0, pointerEvents: "none", overflow: "hidden", zIndex: 9998 }}>
+      <style>{`
+        @keyframes floatUp {
+          0%   { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+          10%  { opacity: 1; }
+          90%  { opacity: 1; }
+          100% { transform: translateY(-10vh) rotate(20deg); opacity: 0; }
+        }
+      `}</style>
+      {items.map(p => (
+        <div key={p.id} style={{
+          position: "absolute",
+          left: p.left,
+          bottom: "-5%",
+          fontFamily: "monospace",
+          fontSize: p.size,
+          color: "#a78bfa",
+          opacity: p.opacity,
+          animation: `floatUp ${p.dur} ${p.delay} linear infinite`,
+        }}>
+          {p.symbol}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const Login = () => {
+  const { serverUrl, login, setLoading } = useContext(AuthContext);
+  const [form, setForm] = useState({ email: "", password: "" });
+  const [showAnim, setShowAnim] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      const res = await axios.post(`${serverUrl}/api/auth/login`, form);
+      login(res.data.token);
+      setShowAnim(true);          // ← trigger animation
+    } catch (error) {
+      alert(error.response?.data?.message);
+      setLoading(false);
+    }
+  };
+
+  const handleAnimDone = () => {
+    navigate("/dashboard");
+  };
+
+  return (
+    <>
+      {showAnim && <LoginAnimation onDone={handleAnimDone} />}
+
+      <style>{`
+        @keyframes morph {
+          0%,100%{border-radius:28% 72% 38% 62%/46% 38% 62% 54%}
+          33%{border-radius:62% 38% 54% 46%/38% 62% 38% 62%}
+          66%{border-radius:46% 54% 62% 38%/54% 46% 54% 46%}
+        }
+        @keyframes pulse-dot {
+          0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,0.45)}
+          50%{box-shadow:0 0 0 5px rgba(34,197,94,0)}
+        }
+        @keyframes fadeSlideIn {
+          from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)}
+        }
+        .av-wrap{position:relative;width:80px;height:80px;margin:0 auto 1rem}
+        .av-ring{position:absolute;inset:-2px;background:linear-gradient(135deg,#7b5cf5,#d946ef,#3b82f6);border-radius:28% 72% 38% 62%/46% 38% 62% 54%;animation:morph 6s ease-in-out infinite;z-index:0}
+        .av-inner{position:relative;z-index:1;width:100%;height:100%;background:#0f172a;border-radius:26% 70% 36% 60%/44% 36% 60% 52%;animation:morph 6s ease-in-out infinite;display:flex;align-items:center;justify-content:center}
+        .session-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#22c55e;margin-right:5px;animation:pulse-dot 2s ease-in-out infinite;vertical-align:middle}
+        .left-panel{animation:fadeSlideIn 0.8s ease both}
+        .right-panel{animation:fadeSlideIn 0.8s ease 0.15s both}
+        .form-input{width:100%;padding:12px;border-radius:10px;background:rgba(255,255,255,0.05);color:white;border:1px solid rgba(255,255,255,0.08);outline:none;font-size:15px;transition:border-color 0.2s;box-sizing:border-box}
+        .form-input::placeholder{color:#6b7280}
+        .form-input:focus{border-color:rgba(167,139,250,0.5)}
+        @media(max-width:768px){.left-panel{display:none!important}}
+      `}</style>
+
+      <div className="min-h-screen bg-[#0f172a] flex items-center justify-center px-4">
+        <div className="w-full max-w-4xl flex items-center gap-12">
+
+          {/* LEFT panel */}
+          <div className="left-panel hidden md:flex flex-col items-center justify-center flex-1 gap-6">
+            <img
+              src="https://media.giphy.com/media/qgQUggAC3Pfv687qPC/giphy.gif"
+              alt="Developer at work"
+              className="w-full max-w-sm rounded-2xl"
+              style={{ opacity: 0.9 }}
+            />
+            <div className="text-center">
+              <h2 className="text-white text-2xl font-bold tracking-tight">
+                Learn. Build.{" "}
+                <span style={{ background:"linear-gradient(90deg,#a78bfa,#ec4899)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text" }}>
+                  Grow.
+                </span>
+              </h2>
+              <p className="text-gray-400 text-sm mt-2 max-w-xs">
+                Your all-in-one platform for collaborative studying and focused productivity.
+              </p>
+            </div>
+            <div className="flex gap-3 flex-wrap justify-center">
+              {["Flashcards","Quizzes","Study Groups","Progress Tracking"].map(tag => (
+                <span key={tag} className="text-xs px-3 py-1 rounded-full text-purple-300"
+                  style={{ background:"rgba(139,92,246,0.12)" }}>
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="hidden md:block self-stretch"
+            style={{ width:"1px", background:"rgba(255,255,255,0.06)" }} />
+
+          {/* RIGHT panel */}
+          <div className="right-panel w-full max-w-sm flex-shrink-0 py-8">
+            <div className="flex flex-col items-center mb-8">
+              <div className="av-wrap">
+                <div className="av-ring" />
+                <div className="av-inner">
+                  <svg width="36" height="36" viewBox="0 0 24 24" fill="#a78bfa">
+                    <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z" />
+                  </svg>
+                </div>
+              </div>
+              <h1 className="text-3xl font-bold text-white tracking-tight">
+                Study
+                <span style={{ background:"linear-gradient(90deg,#a78bfa,#ec4899)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text" }}>
+                  Hive
+                </span>
+              </h1>
+              <p className="text-xs mt-1 tracking-widest uppercase" style={{ color:"#6b7280" }}>
+                <span className="session-dot" />
+                Secure Portal
+              </p>
+            </div>
+
+            <form onSubmit={handleLogin} className="space-y-4">
+              <input type="email" placeholder="Email" className="form-input"
+                onChange={e => setForm({ ...form, email: e.target.value })} />
+              <input type="password" placeholder="Password" className="form-input"
+                onChange={e => setForm({ ...form, password: e.target.value })} />
+              <button type="submit"
+                className="w-full py-3 rounded-xl text-white font-semibold transition"
+                style={{ background:"linear-gradient(90deg,#7c3aed,#4f46e5)", marginTop:"8px" }}
+                onMouseOver={e => e.currentTarget.style.opacity="0.88"}
+                onMouseOut={e => e.currentTarget.style.opacity="1"}>
+                Login
+              </button>
+            </form>
+
+            <p className="text-gray-400 text-sm mt-6 text-center">
+              Don't have an account?{" "}
+              <span className="text-purple-400 cursor-pointer hover:text-purple-300 transition"
+                onClick={() => navigate("/register")}>
+                Register
+              </span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default Login;
