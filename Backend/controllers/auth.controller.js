@@ -4,6 +4,8 @@ import generateToken from "../config/generateToken.js";
 import uploadOnCloudinary from "../utils/cloudinaryUpload.js";
 import cloudinary from "../config/cloudinary.js";
 
+import { OAuth2Client } from "google-auth-library";
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 
 // ================= REGISTER =================
@@ -114,6 +116,46 @@ export const updateProfile = async (req, res) => {
       name: updatedUser.name,
       email: updatedUser.email,
       profilePic: updatedUser.profilePic?.url || "",
+    });
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+//========================= GOOGLE LOGIN=======================================
+export const googleLogin = async (req, res) => {
+  try {
+    const { credential } = req.body;
+
+    const ticket = await client.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+
+    const { email, name, picture } = payload;
+
+    let user = await User.findOne({ email });
+
+    // create user if not exists
+    if (!user) {
+      user = await User.create({
+        name,
+        email,
+        password: "google_oauth", // dummy
+        profilePic: {
+          url: picture,
+          public_id: "google",
+        },
+      });
+    }
+
+    res.json({
+      token: generateToken(user._id),
+      user,
     });
 
   } catch (error) {
