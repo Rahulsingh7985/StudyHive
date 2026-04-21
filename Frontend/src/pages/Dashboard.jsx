@@ -1,15 +1,14 @@
-import React, { useState, useContext } from "react";
-import { UserContext } from "../context/UserContext";
+import React, { useState } from "react";
 import Navbar from "../components/Navbar";
+import Profile from "../components/Profile";
 
 export default function Dashboard() {
-  const { userData } = useContext(UserContext);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
     <div className="flex h-screen bg-[#1e1e2f] text-white relative overflow-hidden">
 
-      {/* Overlay (mobile only) */}
+      {/* Overlay */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-10 md:hidden"
@@ -26,22 +25,12 @@ export default function Dashboard() {
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
       `}
       >
-        {/* Profile */}
+        {/* 🔥 Profile Component */}
         <div>
-          <div className="flex flex-col items-center mb-10">
-            <div className="w-20 h-20 rounded-full border-4 border-purple-500 flex items-center justify-center">
-              <span className="text-3xl">👤</span>
-            </div>
-            <h2 className="mt-4 text-lg font-semibold">
-              {userData?.name || "User"}
-            </h2>
-            <p className="text-sm text-gray-400">
-              {userData?.email || "user@example.com"}
-            </p>
-          </div>
+          <Profile />
 
           {/* Menu */}
-          <nav className="space-y-4">
+          <nav className="space-y-3 mt-8">
             <p className="text-purple-400 font-semibold">Dashboard</p>
             <p className="text-gray-400 hover:text-white cursor-pointer">Activity</p>
             <p className="text-gray-400 hover:text-white cursor-pointer">Overview</p>
@@ -61,13 +50,11 @@ export default function Dashboard() {
       {/* Main Section */}
       <div className="flex-1 flex flex-col p-6 min-w-0">
 
-        {/* ✅ Navbar (imported separately) */}
         <Navbar onMenuClick={() => setSidebarOpen(true)} />
 
-        {/* Content */}
         <div className="flex-1 bg-[#141427] rounded-xl p-6">
           <h1 className="text-xl font-semibold text-purple-400">
-            Dashboard Content Here
+            Dashboard Content Here 🚀
           </h1>
         </div>
       </div>

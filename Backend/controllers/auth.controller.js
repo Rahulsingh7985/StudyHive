@@ -155,7 +155,13 @@ export const googleLogin = async (req, res) => {
 
     res.json({
       token: generateToken(user._id),
-      user,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        profilePic: user.profilePic?.url || "",
+      },
     });
 
   } catch (error) {
