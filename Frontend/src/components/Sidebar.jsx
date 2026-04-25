@@ -1,9 +1,10 @@
 import React from "react";
 import Profile from "./Profile";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 
 export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const navigate = useNavigate();
+  const location = useLocation();
   return (
     <>
       {/* Overlay */}
@@ -27,8 +28,25 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
           <Profile />
 
           <nav className="space-y-3 mt-8">
-            <p  className="text-gray-400 hover:text-white cursor-pointer" onClick={()=>navigate("/Dashboard")}>Dashboard</p>
-            <p className="text-gray-400 hover:text-white cursor-pointer" onClick={() => navigate("/room")}>Room</p>
+            <p
+              onClick={() => navigate("/dashboard")}
+              className={`cursor-pointer ${location.pathname === "/dashboard"
+                  ? "text-purple-400 font-semibold"
+                  : "text-gray-400 hover:text-white"
+                }`}
+            >
+              Dashboard
+            </p>
+
+            <p
+              onClick={() => navigate("/room")}
+              className={`cursor-pointer ${location.pathname.startsWith("/room")
+                  ? "text-purple-400 font-semibold"
+                  : "text-gray-400 hover:text-white"
+                }`}
+            >
+              Room
+            </p>
             <p className="text-gray-400 hover:text-white cursor-pointer">Overview</p>
             <p className="text-gray-400 hover:text-white cursor-pointer">Analytics</p>
             <p className="text-gray-400 hover:text-white cursor-pointer">Statistic</p>
