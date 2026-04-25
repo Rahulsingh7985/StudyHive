@@ -5,12 +5,16 @@ import {
   leaveRoom,
   getRoom,
   endRoom,
+  getMyRooms
 } from "../controllers/room.controller.js";
 
 import { protect } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
+
+// ✅ Get My Rooms  — must be before /:roomId to avoid conflict
+router.get("/my-rooms", protect, getMyRooms);
 
 // 🟢 Create Room
 router.post("/create", protect, createRoom);

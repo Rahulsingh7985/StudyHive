@@ -7,6 +7,7 @@ import Dashboard from "./pages/Dashboard.jsx";
 
 // Protected Route
 import PrivateRoute from "./components/PrivateRoute.jsx";
+import Room from "./pages/Room.jsx";
 
 function App() {
   return (
@@ -23,6 +24,14 @@ function App() {
           element={
             <PrivateRoute>
               <Dashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/room"
+          element={
+            <PrivateRoute>
+              <Room/>
             </PrivateRoute>
           }
         />

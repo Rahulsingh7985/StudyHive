@@ -30,6 +30,16 @@ const userSchema = new mongoose.Schema(
       enum: ["student", "host", "guest"],
       default: "student",
     },
+    HostedRooms: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: "Room",
+      default: [],
+    },
+    memberRooms: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: "Room",
+      default: [],
+    },
   },
   { timestamps: true }
 );

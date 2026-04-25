@@ -182,3 +182,27 @@ export const endRoom = async (req, res) => {
     });
   }
 };
+
+
+// 🟢 6. Get My Rooms
+export const getMyRooms = async (req, res) => {
+  try {
+    const userId = req.user._id;
+ 
+    const rooms = await Room.find({ participants: userId })
+      .populate("host", "name email profilePic")
+      .populate("participants", "name email profilePic")
+      .sort({ createdAt: -1 });
+ 
+    res.status(200).json({
+      success: true,
+      rooms,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching rooms",
+      error: error.message,
+    });
+  }
+};
