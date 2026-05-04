@@ -8,6 +8,7 @@ import Dashboard from "./pages/Dashboard.jsx";
 // Protected Route
 import PrivateRoute from "./components/PrivateRoute.jsx";
 import Room from "./pages/Room.jsx";
+import RoomDetail from "./pages/RoomDetail.jsx";
 
 function App() {
   return (
@@ -31,9 +32,16 @@ function App() {
           path="/room"
           element={
             <PrivateRoute>
-              <Room/>
+              <Room />
             </PrivateRoute>
           }
+        />
+        <Route path="/room/:roomId"
+          element={
+            <privateRoute>
+              <RoomDetail />
+            </privateRoute>
+          } 
         />
 
       </Routes>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
@@ -8,7 +9,7 @@ import { UserContext } from "../context/UserContext";
 export default function Room() {
   const { serverUrl, token } = useContext(AuthContext);
   const { userData } = useContext(UserContext);
-
+  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // ── Modal toggle ──
@@ -378,7 +379,10 @@ export default function Room() {
                         </button>
                       )}
 
-                      <button className="text-xs px-3 py-1.5 rounded-lg bg-purple-600/10 border border-purple-500/20 text-purple-400 hover:bg-purple-600 hover:text-white transition-all duration-200">
+                      <button
+                        onClick={() => navigate(`/room/${room._id}`)}
+                        className="text-xs px-3 py-1.5 rounded-lg bg-purple-600/10 border border-purple-500/20 text-purple-400 hover:bg-purple-600 hover:text-white transition-all duration-200"
+                      >
                         Enter →
                       </button>
                     </div>
