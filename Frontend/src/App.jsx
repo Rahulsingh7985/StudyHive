@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard.jsx";
 import PrivateRoute from "./components/PrivateRoute.jsx";
 import Room from "./pages/Room.jsx";
 import RoomDetail from "./pages/RoomDetail.jsx";
+import DiaryPage from "./pages/DiaryPage.jsx";
 
 function App() {
   return (
@@ -43,6 +44,7 @@ function App() {
             </privateRoute>
           } 
         />
+        <Route path="/diary" element={<DiaryPage/>} />
 
       </Routes>
     </BrowserRouter>

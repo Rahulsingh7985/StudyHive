@@ -35,7 +35,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
                   : "text-gray-400 hover:text-white"
                 }`}
             >
-              Dashboard
+              📊 Dashboard
             </p>
 
             <p
@@ -45,9 +45,17 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
                   : "text-gray-400 hover:text-white"
                 }`}
             >
-              Room
+              👥 Room
             </p>
-            <p className="text-gray-400 hover:text-white cursor-pointer">Overview</p>
+             <p
+              onClick={() => navigate("/diary")}
+              className={`cursor-pointer ${location.pathname.startsWith("/diary")
+                  ? "text-purple-400 font-semibold"
+                  : "text-gray-400 hover:text-white"
+                }`}
+            >
+              📖 My Diary
+            </p>
             <p className="text-gray-400 hover:text-white cursor-pointer">Analytics</p>
             <p className="text-gray-400 hover:text-white cursor-pointer">Statistic</p>
             <p className="text-gray-400 hover:text-white cursor-pointer">Settings</p>

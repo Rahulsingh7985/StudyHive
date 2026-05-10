@@ -5,6 +5,7 @@ import connectDB from "./config/db.js";
 import authRoutes from "./routes/auth.route.js";
 import userRoutes from "./routes/user.route.js";
 import roomRoutes from "./routes/room.route.js";
+import diaryRoutes from "./routes/diary.route.js";
 
 dotenv.config();
 
@@ -21,6 +22,7 @@ app.use(cors());
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/rooms", roomRoutes);
+app.use("/api/diary", diaryRoutes);
 
 const PORT = process.env.PORT || 5000;
 
